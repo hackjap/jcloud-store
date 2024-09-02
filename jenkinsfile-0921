@@ -1,0 +1,71 @@
+/** [ TPS JENKINS COMMON SCRIPT INFO ]
+------------------------------------
+__workspace (FROM jenkins slave)
+    __manifest (https://bitbucket.org:okestrolab/tps_manifest)
+        - tps의 빌드 배포에 필요한 환경 설정 자원
+        - argocd가 watch 중인 chart가 존재하며 Jenkins가 kaniko 빌드,푸쉬 이후 해당 값으로 최신화 되어야함.
+    __tps (https://bitbucket.org:okestrolab/tps)
+        - 현재 개발중인 소스코드 자원
+------------------------------------*/
+
+pipeline {
+
+    agent any
+
+    stages {
+
+        stage("1. Initialization") {
+            steps {
+                script  {
+                    currentBuild.displayName =  "#${BUILD_NUMBER} - ${MOD_NAME}"
+                    currentBuild.description =  "Executed @ ${NODE_NAME}"
+                }
+            }
+        }
+
+        stage("2. BUILD") {
+            steps {
+                script {
+
+                    def COMMIT_ID = ""
+
+                    dir("tps") {
+
+                        git branch: "develop",
+                        credentialsId: 'tps-bitbucket',
+                        url: 'https://bitbucket.org/okestrolab/tps'
+
+                        COMMIT_ID = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+                        echo "[INFO] commit_id : ${COMMIT_ID}"
+
+                        docker.withRegistry('http://harbor.prd.tps.com', 'tps-harbor') {
+                            if ("${MOD_NAME}" == "react-app" || "${MOD_NAME}" == "storybook") {
+                                dir("react-app") {
+                                    sh "cp -f ${workspace}/tps-docker/${MOD_NAME}/Dockerfile . && ls -al"
+                                    sh """
+                                            docker build -t harbor.prd.tps.com/tps/${MOD_NAME}:${COMMIT_ID} .
+                                            docker push harbor.prd.tps.com/tps/${MOD_NAME}:${COMMIT_ID}
+                                       """
+                                }
+                            } else {
+                                sh "cp -f ${workspace}/tps-docker/${MOD_NAME}/Dockerfile . && ls -al"
+                                sh """
+                                        docker build -t harbor.prd.tps.com/tps/${MOD_NAME}:${COMMIT_ID} . -f cloud-config/docker/Dockerfile-dev
+                                        docker push harbor.prd.tps.com/tps/${MOD_NAME}:${COMMIT_ID}
+                                   """
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+            sh "docker image prune -f"
+            sh "docker container prune -f"
+        }
+    }
+}
