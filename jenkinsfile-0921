@@ -51,7 +51,7 @@ pipeline {
                                 sh """  
                                         pwd
                                         ls -al
-                                        docker build -t harbor.prd.tps.com/tps/${MOD_NAME}:${COMMIT_ID} . -f cloud-config/docker/Dockerfile-prd
+                                        docker build -t harbor.prd.tps.com/tps/${MOD_NAME}:${COMMIT_ID} . -f cloud-config/docker/Dockerfile-Prd
                                         docker push harbor.prd.tps.com/tps/${MOD_NAME}:${COMMIT_ID}
                                    """
                             }
