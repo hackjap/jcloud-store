@@ -51,7 +51,7 @@ pipeline {
                                 sh """  
                                         pwd
                                         ls -al
-                                        docker build --build-arg BUILD_STAGE=prd --build-arg MOD_NAME=cloud-config --build-arg SPRING_PROFILES_ACTIVE=jdbc,prd -t harbor.prd.tps.com/tps/${MOD_NAME}:${COMMIT_ID} . -f cloud-config/docker/Dockerfile-Prd
+                                        docker build --build-arg BUILD_STAGE=prd --build-arg MOD_NAME=cloud-config --build-arg SPRING_PROFILES_ACTIVE=jdbc,prd -t harbor.prd.tps.com/tps/${MOD_NAME}:${COMMIT_ID} . -f cloud-config/docker/Dockerfile-prd
                                         docker push harbor.prd.tps.com/tps/${MOD_NAME}:${COMMIT_ID}
                                    """
                             }
