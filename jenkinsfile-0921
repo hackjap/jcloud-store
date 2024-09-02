@@ -48,8 +48,10 @@ pipeline {
                                        """
                                 }
                             } else {
-                                sh "cp -f ${workspace}/tps-docker/${MOD_NAME}/Dockerfile . && ls -al"
-                                sh """
+                                sh """  
+                                        pwd
+                                        ls -al
+                                        cd tps/
                                         docker build -t harbor.prd.tps.com/tps/${MOD_NAME}:${COMMIT_ID} . -f cloud-config/docker/Dockerfile-dev
                                         docker push harbor.prd.tps.com/tps/${MOD_NAME}:${COMMIT_ID}
                                    """
